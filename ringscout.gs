@@ -1,7 +1,14 @@
+// Grab config variables from the Google Sheet
+var ss = SpreadsheetApp.getActiveSpreadsheet();
+var sheet = ss.getActiveSheet();
+var CLIENT_ID = sheet.getRange(23, 2).getValue();
+var CLIENT_SECRET = sheet.getRange(24, 2).getValue();
+
 // Add Custom Menu
 function onOpen() {
   var ui = SpreadsheetApp.getUi();
   ui.createMenu("RingRx")
+    .addItem("Get Token", "getToken")
     .addItem("Get Billing Info", "getBillingInfo")
     .addToUi();
 }
@@ -30,7 +37,7 @@ function logUrlFetch(url, opt_params) {
 }
 
 function getToken() {
-  var service = getRingRxService();
+  var service = getRingRxService_();
 
   if (service.hasAccess()) {
     Logger.log("App has access.");
@@ -43,6 +50,15 @@ function getToken() {
     };
 
     var response = logUrlFetch(api, options);
+
+    // Parse the JSON reply
+    var json = response.getContentText();
+    var data = JSON.parse(json);
+    var sheet = SpreadsheetApp.getActiveSheet();
+    sheet.getRange(2, 2).setValue(data["token_type"]);
+    sheet.getRange(3, 2).setValue(data["access_token"]);
+    sheet.getRange(4, 2).setValue(data["expires_in"]);
+    sheet.getRange(5, 2).setValue(data["refresh_token"]);
   } else {
     Logger.log("App has no access yet.");
 
@@ -58,14 +74,14 @@ function getToken() {
 /***************************************/
 // Get Billing Info
 function getBillingInfo() {
-  var service = getRingRxService();
+  var service = getRingRxService_();
 
   if (service.hasAccess()) {
     Logger.log("App has access.");
     var api = "https://portal.ringrx.com/billing";
 
     var headers = {
-      Authorization: "Bearer " + getRingRxService().getAccessToken(),
+      Authorization: "Bearer " + getRingRxService_().getAccessToken(),
       Accept: "application/json",
     };
 
@@ -88,7 +104,10 @@ function getBillingInfo() {
   }
 }
 
-function getRingRxService() {
+/***************************************/
+// Oauth2 Library Services
+
+function getRingRxService_() {
   // Create a new service with the given name. The name will be used when
   // persisting the authorized token, so ensure it is unique within the
   // scope of the property store.
@@ -102,8 +121,8 @@ function getRingRxService() {
       .setTokenUrl("https://accounts.google.com/o/oauth2/token")
 
       // Set the client ID and secret, from the Google Developers Console.
-      .setClientId("CLIENT_ID")
-      .setClientSecret("CLIENT_SECRET")
+      .setClientId(CLIENT_ID)
+      .setClientSecret(CLIENT_SECRET)
 
       // Set the name of the callback function to be invoked to complete
       // the OAuth flow.
@@ -121,7 +140,7 @@ function getRingRxService() {
 
 // handle the callback
 function authCallback(request) {
-  var ringrxService = getRingRxService();
+  var ringrxService = getRingRxService_();
   var isAuthorized = ringrxService.handleCallback(request);
   if (isAuthorized) {
     return HtmlService.createHtmlOutput("Success! You can close this tab.");
@@ -134,7 +153,7 @@ function authCallback(request) {
  * Reset the authorization state, so that it can be re-tested.
  */
 function reset() {
-  getRingRxService().reset();
+  getRingRxService_().reset();
 }
 
 /**
