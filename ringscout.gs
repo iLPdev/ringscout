@@ -102,9 +102,7 @@ function getRingRxService() {
       .setTokenUrl("https://accounts.google.com/o/oauth2/token")
 
       // Set the client ID and secret, from the Google Developers Console.
-      .setClientId(
-        "CLIENT_ID"
-      )
+      .setClientId("CLIENT_ID")
       .setClientSecret("CLIENT_SECRET")
 
       // Set the name of the callback function to be invoked to complete
