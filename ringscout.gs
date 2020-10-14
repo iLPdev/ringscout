@@ -60,7 +60,7 @@ function getToken() {
   if (service.hasAccess()) {
     Logger.log("App has access.");
     var api =
-      "https://portal.ringrx.com/auth/token?username=ian@drianpritchard.com&password=*34Lentils";
+      "https://portal.ringrx.com/auth/token?username=USERNAME&password=PASSWORD";
 
     var options = {
       method: "POST",
