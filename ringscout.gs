@@ -17,6 +17,7 @@ function onOpen() {
   ui.createMenu("RingRx")
     .addItem("Get Token", "getToken")
     .addItem("Get Billing Info", "getBillingInfo")
+    .addItem("Get PBX Callbacks", "getPBXCallbacks")
     .addToUi();
 }
 
@@ -76,6 +77,38 @@ function getToken() {
     sheet.getRange(3, 2).setValue(data["access_token"]);
     sheet.getRange(4, 2).setValue(data["expires_in"]);
     sheet.getRange(5, 2).setValue(data["refresh_token"]);
+  } else {
+    Logger.log("App has no access yet.");
+
+    // open this url to gain authorization from RingRx
+    var authorizationUrl = service.getAuthorizationUrl();
+    Logger.log(
+      "Open the following URL and re-run the script: %s",
+      authorizationUrl
+    );
+  }
+}
+
+// Get PBX Callbacks
+function getPBXCallbacks() {
+  var service = getRingRxService_();
+
+  if (service.hasAccess()) {
+    Logger.log("App has access.");
+    var api = "https://portal.ringrx.com/pbxcallbacks";
+
+    var headers = {
+      Authorization: "Bearer " + sheet.getRange(3, 2).getValue(),
+      Accept: "application/json",
+    };
+
+    var options = {
+      headers: headers,
+      method: "GET",
+      muteHttpExceptions: true,
+    };
+
+    var response = logUrlFetch(api, options);
   } else {
     Logger.log("App has no access yet.");
 
